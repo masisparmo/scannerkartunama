@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scanner Kartu Nama - Otomatis</title>
+    <title>Scanner Kartu Nama Otomatis</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -66,10 +66,10 @@
     <div class="container mx-auto p-4 md:p-8 max-w-2xl">
         <header class="text-center mb-8">
             <h1 class="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-400">Scanner Kartu Nama Otomatis</h1>
-            <p class="text-gray-600 dark:text-gray-400 mt-2">Insya Allah Data Hasil Scan 99% Akurat. Powered by Gemini AI</p>
+            <p class="text-gray-600 dark:text-gray-400 mt-2">Insya Allah 99% Akurat. Powered by Gemini AI</p>
         </header>
 
-        <!-- NEW: API Key Screen -->
+        <!-- API Key Screen -->
         <div id="api-key-screen" class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
             <h2 class="text-2xl font-bold mb-4 text-center">Selamat Datang!</h2>
             <p class="text-center text-gray-600 dark:text-gray-400 mb-6">Aplikasi ini memerlukan API Key Gemini untuk berfungsi. Silakan masukkan API Key Anda di bawah ini.</p>
@@ -87,7 +87,7 @@
                     <li>Salin (copy) kunci tersebut dan tempel (paste) di atas.</li>
                 </ol>
                 <p class="pt-4 border-t border-gray-200 dark:border-gray-700"><strong>Jika Anda tidak ingin menggunakan API Key, </strong></p>
-                <p>Anda bisa mencoba fungsionalitas serupa dengan mengunjungi <a href="https://g.co/gemini/share/cbced047d906" target="_blank" class="text-blue-500 hover:underline">Link Gemini ini</a> dan scan atau mengunggah file gambar kartu nama di sana setelah login dengan akun Google.</p>
+                <p>Anda bisa mencoba fungsionalitas serupa dengan mengunjungi <a href="https://g.co/gemini/share/cbced047d906" target="_blank" class="text-blue-500 hover:underline">Link Gemini ini</a> dan mengunggah gambar kartu nama Anda di sana setelah login dengan akun Google.</p>
             </div>
         </div>
 
@@ -102,13 +102,17 @@
             <p class="text-xs text-gray-500 dark:text-gray-400 mt-4"><i data-lucide="shield-check" class="inline w-3 h-3"></i> Semua proses dilakukan di perangkat Anda. Data Anda aman.</p>
         </div>
 
-        <!-- Other screens remain the same... -->
+        <!-- Scanner Screen -->
         <div id="scanner-screen" class="hidden bg-white dark:bg-gray-800 p-4 rounded-xl shadow-lg">
             <div class="relative w-full aspect-video bg-gray-900 rounded-lg overflow-hidden mb-4"><video id="video" class="w-full h-full object-cover" autoplay playsinline></video><div class="absolute inset-0 border-4 border-dashed border-white/50 rounded-lg"></div></div>
             <div class="flex flex-col sm:flex-row gap-2"><button id="capture-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105 flex items-center justify-center gap-2"><i data-lucide="aperture" class="w-5 h-5"></i>Ambil Gambar</button><button id="cancel-scan-btn" class="w-full sm:w-auto bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"><i data-lucide="x" class="w-5 h-5"></i>Batal</button></div>
             <canvas id="canvas" class="hidden"></canvas><audio id="snap-sound" class="snap-sound" src="https://www.soundjay.com/button/camera-shutter-click-01.mp3"></audio>
         </div>
+        
+        <!-- Processing Screen -->
         <div id="processing-screen" class="hidden text-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg"><div class="flex justify-center items-center flex-col"><div class="loader mb-4"></div><p id="progress-title" class="text-lg font-semibold animate-pulse">AI Menganalisis Gambar...</p><p id="progress-status" class="text-sm text-gray-500 dark:text-gray-400 mt-2">Mengirim gambar ke Gemini untuk ekstraksi...</p></div></div>
+        
+        <!-- Results Screen -->
         <div id="results-screen" class="hidden bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
             <div class="flex justify-between items-center"><h2 class="text-2xl font-bold mb-4 border-b-0 pb-2">Hasil Ekstraksi dari AI</h2><button id="settings-btn" title="Pengaturan URL Google Sheet" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 mb-4"><i data-lucide="settings" class="w-5 h-5"></i></button></div>
             <p class="text-sm text-gray-500 dark:text-gray-400 mb-4 -mt-4">Silakan periksa dan perbaiki data di bawah ini sebelum menyimpan.</p>
@@ -119,7 +123,7 @@
                 <div><label for="telepon" class="block text-sm font-medium text-gray-700 dark:text-gray-300">No. HP / WA</label><input type="tel" id="telepon" name="telepon" class="mt-1 block w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"></div>
                 <div><label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label><input type="email" id="email" name="email" class="mt-1 block w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"></div>
             </form>
-            <div id="raw-text-container" class="mt-6 hidden"><h3 class="text-lg font-semibold">Teks Hasil Scan oleh AI</h3><pre id="raw-text" class="mt-2 text-xs bg-gray-100 dark:bg-gray-700 p-3 rounded-md max-h-40 overflow-y-auto whitespace-pre-wrap"></pre></div>
+            <div id="raw-text-container" class="mt-6 hidden"><h3 class="text-lg font-semibold">Respons Mentah dari AI</h3><pre id="raw-text" class="mt-2 text-xs bg-gray-100 dark:bg-gray-700 p-3 rounded-md max-h-40 overflow-y-auto whitespace-pre-wrap"></pre></div>
             <div class="mt-6 flex flex-col gap-2">
                 <button id="save-to-sheet-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105 flex items-center justify-center gap-2"><i data-lucide="sheet" class="w-5 h-5"></i>Simpan ke Google Sheet</button>
                 <div id="sheet-save-status" class="text-center text-sm h-5"></div>
@@ -130,12 +134,12 @@
                 </div>
             </div>
         </div>
-        <footer class="text-center mt-8 text-sm text-gray-500 dark:text-gray-400"><p>&copy; 2025 Dibuat oleh ISPARMO dengan bantuan Gemini. Akurasi bergantung pada kualitas gambar.</p></footer>
+        <footer class="text-center mt-8 text-sm text-gray-500 dark:text-gray-400"><p>&copy; 2025 Dibuat oleh ISPARMO dengan bantuan Gemini Ai. Akurasi bergantung pada kualitas gambar.</p></footer>
     </div>
     
-    <!-- Modals remain the same -->
+    <!-- Modals -->
     <div id="email-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden opacity-0"><div class="modal-content bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg p-6 transform scale-95"><div class="flex justify-between items-center mb-4"><h3 class="text-xl font-bold flex items-center gap-2"><i data-lucide="mail-check" class="w-6 h-6 text-purple-500"></i>Draf Email dari Gemini</h3><button id="close-modal-btn" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"><i data-lucide="x" class="w-6 h-6"></i></button></div><div id="modal-loader" class="text-center py-8 hidden"><div class="loader mx-auto mb-4"></div><p>Gemini sedang menulis email...</p></div><div id="modal-result"><textarea id="email-draft" rows="12" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md p-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea><button id="copy-email-btn" class="mt-4 w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2"><i data-lucide="copy" class="w-5 h-5"></i>Salin Teks</button><p id="copy-status" class="text-center text-sm text-green-500 mt-2 h-4"></p></div></div></div>
-    <div id="sheet-setup-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 hidden opacity-0"><div class="modal-content bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl p-6 transform scale-95 max-h-[90vh] overflow-y-auto"><div class="flex justify-between items-center mb-4 sticky top-0 bg-white dark:bg-gray-800 py-2 -mt-2"><h3 class="text-xl font-bold flex items-center gap-2"><i data-lucide="file-spreadsheet" class="w-6 h-6 text-green-500"></i>Setup Google Sheet</h3><button id="close-setup-modal-btn" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"><i data-lucide="x" class="w-6 h-6"></i></button></div><div class="space-y-4 text-sm"><p>Ikuti 5 langkah berikut untuk menghubungkan aplikasi ini ke Google Sheet Anda.</p><div class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg"><h4 class="font-bold">Langkah 1: Siapkan Google Sheet</h4><ol class="list-decimal list-inside mt-2 space-y-1"><li>Buka <a href="https://docs.google.com/spreadsheets/" target="_blank" class="text-blue-500 hover:underline">sheets.google.com</a> dan buat <strong>Spreadsheet baru</strong>.</li><li>Di baris pertama, buat header kolom berikut: `Timestamp`, `Nama`, `Jabatan`, `Perusahaan`, `Telepon`, `Email`.</li></ol></div><div class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg"><h4 class="font-bold">Langkah 2: Tambahkan Kode Apps Script</h4><ol class="list-decimal list-inside mt-2 space-y-1"><li>Di Google Sheet Anda, klik menu <strong>Ekstensi</strong> > <strong>Apps Script</strong>.</li><li>Hapus semua kode yang ada, lalu salin dan tempel kode di bawah ini:</li></ol><div class="instruction-code mt-2"><button id="copy-script-btn" class="copy-code-btn">Salin</button><pre id="apps-script-code">function doPost(e) {
+    <div id="sheet-setup-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 hidden opacity-0"><div class="modal-content bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl p-6 transform scale-95 max-h-[90vh] overflow-y-auto"><div class="flex justify-between items-center mb-4 sticky top-0 bg-white dark:bg-gray-800 py-2 -mt-2"><h3 class="text-xl font-bold flex items-center gap-2"><i data-lucide="file-spreadsheet" class="w-6 h-6 text-green-500"></i>Setup Google Sheet</h3><button id="close-setup-modal-btn" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"><i data-lucide="x" class="w-6 h-6"></i></button></div><div class="space-y-4 text-sm"><p>Ikuti 5 langkah berikut untuk menghubungkan aplikasi ini ke Google Sheet Anda.</p><div class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg"><h4 class="font-bold">Langkah 1: Siapkan Google Sheet</h4><ol class="list-decimal list-inside mt-2 space-y-1"><li>Buka <a href="https://sheets.google.com" target="_blank" class="text-blue-500 hover:underline">sheets.google.com</a> dan buat <strong>Spreadsheet baru</strong>.</li><li>Di baris pertama, buat header kolom berikut: `Timestamp`, `Nama`, `Jabatan`, `Perusahaan`, `Telepon`, `Email`.</li></ol></div><div class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg"><h4 class="font-bold">Langkah 2: Tambahkan Kode Apps Script</h4><ol class="list-decimal list-inside mt-2 space-y-1"><li>Di Google Sheet Anda, klik menu <strong>Ekstensi</strong> > <strong>Apps Script</strong>.</li><li>Hapus semua kode yang ada, lalu salin dan tempel kode di bawah ini:</li></ol><div class="instruction-code mt-2"><button id="copy-script-btn" class="copy-code-btn">Salin</button><pre id="apps-script-code">function doPost(e) {
   try {
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Sheet1"); 
     var data = JSON.parse(e.postData.contents);
@@ -297,9 +301,25 @@
             }
         }
 
+        // --- NEW: Helper function to format phone number ---
+        /**
+         * Gets the phone number from the input and removes the leading '+' if it's a +62 number.
+         * @returns {string} The formatted phone number.
+         */
+        function getFormattedPhoneNumber() {
+            const phoneNumber = phoneInput.value.trim();
+            // Jika nomor telepon dimulai dengan '+62', hapus karakter '+'
+            if (phoneNumber.startsWith('+62')) {
+                return phoneNumber.substring(1); // Returns '62...'
+            }
+            return phoneNumber;
+        }
+
         function saveAsCSV() {
             const headers = ['Nama', 'Jabatan', 'Perusahaan', 'No. HP/WA', 'Email'];
-            const data = [nameInput.value, positionInput.value, companyInput.value, phoneInput.value, emailInput.value];
+            // --- MODIFIED: Use the formatted phone number ---
+            const formattedPhone = getFormattedPhoneNumber();
+            const data = [nameInput.value, positionInput.value, companyInput.value, formattedPhone, emailInput.value];
             const escapeCSV = (field) => `"${String(field).replace(/"/g, '""')}"`;
             const csvContent = [headers.join(','), data.map(escapeCSV).join(',')].join('\n');
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -327,7 +347,15 @@
         async function sendDataToSheet() {
             sheetSaveStatus.textContent = "Menyimpan ke Google Sheet...";
             sheetSaveStatus.className = "text-center text-sm h-5 text-blue-500 animate-pulse";
-            const payload = { nama: nameInput.value, jabatan: positionInput.value, perusahaan: companyInput.value, telepon: phoneInput.value, email: emailInput.value };
+            // --- MODIFIED: Use the formatted phone number ---
+            const formattedPhone = getFormattedPhoneNumber();
+            const payload = { 
+                nama: nameInput.value, 
+                jabatan: positionInput.value, 
+                perusahaan: companyInput.value, 
+                telepon: formattedPhone, // Send formatted number
+                email: emailInput.value 
+            };
             try {
                 const response = await fetch(googleScriptUrl, { method: 'POST', mode: 'cors', redirect: 'follow', headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
                 if (response.ok || response.type === 'opaque') {
