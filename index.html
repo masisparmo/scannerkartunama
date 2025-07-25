@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scanner Kartu Nama - Otomatis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .snap-sound {
+            display: none;
+        }
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .modal-overlay {
+            transition: opacity 0.3s ease;
+        }
+        .modal-content {
+            transition: transform 0.3s ease;
+        }
+        .instruction-code {
+            background-color: #1f2937;
+            color: #d1d5db;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: monospace;
+            position: relative;
+        }
+        .copy-code-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: #4b5563;
+            color: white;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .copy-code-btn:hover {
+            background-color: #6b7280;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-2xl">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-400">Scanner Kartu Nama Otomatis</h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-2">Powered by Gemini AI</p>
+        </header>
+
+        <!-- NEW: API Key Screen -->
+        <div id="api-key-screen" class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
+            <h2 class="text-2xl font-bold mb-4 text-center">Selamat Datang!</h2>
+            <p class="text-center text-gray-600 dark:text-gray-400 mb-6">Aplikasi ini memerlukan API Key Gemini untuk berfungsi. Silakan masukkan API Key Anda di bawah ini.</p>
+            <div class="mb-4">
+                <label for="api-key-input" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Gemini API Key</label>
+                <input type="password" id="api-key-input" class="mt-1 block w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Masukkan API Key Anda">
+            </div>
+            <button id="save-api-key-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Lanjutkan</button>
+            <div class="mt-6 text-xs text-gray-500 dark:text-gray-400 space-y-2">
+                <p><strong>Cara mendapatkan API Key:</strong></p>
+                <ol class="list-decimal list-inside">
+                    <li>Kunjungi <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-blue-500 hover:underline">Google AI Studio</a>.</li>
+                    <li>Login dengan akun Google Anda.</li>
+                    <li>Klik tombol "Create API key" untuk membuat kunci baru.</li>
+                    <li>Salin (copy) kunci tersebut dan tempel (paste) di atas.</li>
+                </ol>
+                <p class="pt-4 border-t border-gray-200 dark:border-gray-700"><strong>Jika Anda tidak ingin menggunakan API Key, </strong></p>
+                <p>Anda bisa mencoba fungsionalitas serupa dengan mengunjungi <a href="https://g.co/gemini/share/cbced047d906" target="_blank" class="text-blue-500 hover:underline">Link Gemini ini</a> dan mengunggah gambar kartu nama Anda di sana setelah login dengan akun Google.</p>
+            </div>
+        </div>
+
+        <!-- Initial Screen -->
+        <div id="initial-screen" class="hidden text-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
+            <div class="flex justify-center mb-6"><i data-lucide="contact-2" class="w-16 h-16 text-blue-500"></i></div>
+            <div class="flex flex-col sm:flex-row gap-4">
+                <button id="start-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105 flex items-center justify-center gap-2"><i data-lucide="camera" class="w-5 h-5"></i>Mulai Pindai</button>
+                <button id="upload-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105 flex items-center justify-center gap-2"><i data-lucide="upload" class="w-5 h-5"></i>Unggah Gambar</button>
+            </div>
+            <input type="file" id="image-upload-input" class="hidden" accept="image/*">
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-4"><i data-lucide="shield-check" class="inline w-3 h-3"></i> Semua proses dilakukan di perangkat Anda. Data Anda aman.</p>
+        </div>
+
+        <!-- Other screens remain the same... -->
+        <div id="scanner-screen" class="hidden bg-white dark:bg-gray-800 p-4 rounded-xl shadow-lg">
+            <div class="relative w-full aspect-video bg-gray-900 rounded-lg overflow-hidden mb-4"><video id="video" class="w-full h-full object-cover" autoplay playsinline></video><div class="absolute inset-0 border-4 border-dashed border-white/50 rounded-lg"></div></div>
+            <div class="flex flex-col sm:flex-row gap-2"><button id="capture-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105 flex items-center justify-center gap-2"><i data-lucide="aperture" class="w-5 h-5"></i>Ambil Gambar</button><button id="cancel-scan-btn" class="w-full sm:w-auto bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"><i data-lucide="x" class="w-5 h-5"></i>Batal</button></div>
+            <canvas id="canvas" class="hidden"></canvas><audio id="snap-sound" class="snap-sound" src="https://www.soundjay.com/button/camera-shutter-click-01.mp3"></audio>
+        </div>
+        <div id="processing-screen" class="hidden text-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg"><div class="flex justify-center items-center flex-col"><div class="loader mb-4"></div><p id="progress-title" class="text-lg font-semibold animate-pulse">AI Menganalisis Gambar...</p><p id="progress-status" class="text-sm text-gray-500 dark:text-gray-400 mt-2">Mengirim gambar ke Gemini untuk ekstraksi...</p></div></div>
+        <div id="results-screen" class="hidden bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+            <div class="flex justify-between items-center"><h2 class="text-2xl font-bold mb-4 border-b-0 pb-2">Hasil Ekstraksi dari AI</h2><button id="settings-btn" title="Pengaturan URL Google Sheet" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 mb-4"><i data-lucide="settings" class="w-5 h-5"></i></button></div>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4 -mt-4">Silakan periksa dan perbaiki data di bawah ini sebelum menyimpan.</p>
+            <form id="data-form" class="space-y-4">
+                <div><label for="nama" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nama</label><input type="text" id="nama" name="nama" class="mt-1 block w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"></div>
+                <div><label for="jabatan" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Jabatan</label><input type="text" id="jabatan" name="jabatan" class="mt-1 block w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"></div>
+                <div><label for="perusahaan" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Perusahaan</label><input type="text" id="perusahaan" name="perusahaan" class="mt-1 block w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"></div>
+                <div><label for="telepon" class="block text-sm font-medium text-gray-700 dark:text-gray-300">No. HP / WA</label><input type="tel" id="telepon" name="telepon" class="mt-1 block w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"></div>
+                <div><label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label><input type="email" id="email" name="email" class="mt-1 block w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"></div>
+            </form>
+            <div id="raw-text-container" class="mt-6 hidden"><h3 class="text-lg font-semibold">Respons Mentah dari AI</h3><pre id="raw-text" class="mt-2 text-xs bg-gray-100 dark:bg-gray-700 p-3 rounded-md max-h-40 overflow-y-auto whitespace-pre-wrap"></pre></div>
+            <div class="mt-6 flex flex-col gap-2">
+                <button id="save-to-sheet-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105 flex items-center justify-center gap-2"><i data-lucide="sheet" class="w-5 h-5"></i>Simpan ke Google Sheet</button>
+                <div id="sheet-save-status" class="text-center text-sm h-5"></div>
+                <button id="generate-email-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105 flex items-center justify-center gap-2"><i data-lucide="sparkles" class="w-5 h-5"></i>✨ Buat Draf Email Follow-up</button>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <button id="save-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105 flex items-center justify-center gap-2"><i data-lucide="download" class="w-5 h-5"></i>Simpan sebagai CSV</button>
+                    <button id="rescan-btn" class="w-full sm:w-auto bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"><i data-lucide="refresh-cw" class="w-5 h-5"></i>Pindai Lagi</button>
+                </div>
+            </div>
+        </div>
+        <footer class="text-center mt-8 text-sm text-gray-500 dark:text-gray-400"><p>&copy; 2025 Dibuat oleh ISPARMO dengan bantuan Gemini. Akurasi bergantung pada kualitas gambar.</p></footer>
+    </div>
+    
+    <!-- Modals remain the same -->
+    <div id="email-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden opacity-0"><div class="modal-content bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg p-6 transform scale-95"><div class="flex justify-between items-center mb-4"><h3 class="text-xl font-bold flex items-center gap-2"><i data-lucide="mail-check" class="w-6 h-6 text-purple-500"></i>Draf Email dari Gemini</h3><button id="close-modal-btn" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"><i data-lucide="x" class="w-6 h-6"></i></button></div><div id="modal-loader" class="text-center py-8 hidden"><div class="loader mx-auto mb-4"></div><p>Gemini sedang menulis email...</p></div><div id="modal-result"><textarea id="email-draft" rows="12" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md p-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea><button id="copy-email-btn" class="mt-4 w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2"><i data-lucide="copy" class="w-5 h-5"></i>Salin Teks</button><p id="copy-status" class="text-center text-sm text-green-500 mt-2 h-4"></p></div></div></div>
+    <div id="sheet-setup-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 hidden opacity-0"><div class="modal-content bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl p-6 transform scale-95 max-h-[90vh] overflow-y-auto"><div class="flex justify-between items-center mb-4 sticky top-0 bg-white dark:bg-gray-800 py-2 -mt-2"><h3 class="text-xl font-bold flex items-center gap-2"><i data-lucide="file-spreadsheet" class="w-6 h-6 text-green-500"></i>Setup Google Sheet</h3><button id="close-setup-modal-btn" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"><i data-lucide="x" class="w-6 h-6"></i></button></div><div class="space-y-4 text-sm"><p>Ikuti 5 langkah berikut untuk menghubungkan aplikasi ini ke Google Sheet Anda.</p><div class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg"><h4 class="font-bold">Langkah 1: Siapkan Google Sheet</h4><ol class="list-decimal list-inside mt-2 space-y-1"><li>Buka <a href="https://sheets.google.com" target="_blank" class="text-blue-500 hover:underline">sheets.google.com</a> dan buat <strong>Spreadsheet baru</strong>.</li><li>Di baris pertama, buat header kolom berikut: `Timestamp`, `Nama`, `Jabatan`, `Perusahaan`, `Telepon`, `Email`.</li></ol></div><div class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg"><h4 class="font-bold">Langkah 2: Tambahkan Kode Apps Script</h4><ol class="list-decimal list-inside mt-2 space-y-1"><li>Di Google Sheet Anda, klik menu <strong>Ekstensi</strong> > <strong>Apps Script</strong>.</li><li>Hapus semua kode yang ada, lalu salin dan tempel kode di bawah ini:</li></ol><div class="instruction-code mt-2"><button id="copy-script-btn" class="copy-code-btn">Salin</button><pre id="apps-script-code">function doPost(e) {
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Sheet1"); 
+    var data = JSON.parse(e.postData.contents);
+    var timestamp = new Date();
+    sheet.appendRow([
+      timestamp,
+      data.nama || "",
+      data.jabatan || "",
+      data.perusahaan || "",
+      data.telepon || "",
+      data.email || ""
+    ]);
+    return ContentService
+      .createTextOutput(JSON.stringify({ "status": "success" }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ "status": "error", "message": error.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}</pre></div></div><div class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg"><h4 class="font-bold">Langkah 3 & 4: Deploy dan Beri Izin</h4><ol class="list-decimal list-inside mt-2 space-y-1"><li>Klik tombol biru <strong>Deploy</strong> > <strong>New deployment</strong>.</li><li>Klik ikon gerigi (⚙️), pilih <strong>Web app</strong>.</li><li>Di bagian "Who has access", ubah menjadi <strong>Anyone</strong>.</li><li>Klik <strong>Deploy</strong>, lalu klik <strong>Authorize access</strong>.</li><li>Pilih akun Google Anda, klik <strong>Advanced</strong>, lalu <strong>"Go to ... (unsafe)"</strong>, dan terakhir klik <strong>Allow</strong>.</li></ol></div><div class="p-4 bg-green-100 dark:bg-green-900 rounded-lg border border-green-500"><h4 class="font-bold">Langkah 5: Masukkan URL Anda</h4><p class="mt-2">Setelah deploy berhasil, salin <strong>Web app URL</strong> yang muncul dan tempel di bawah ini.</p><input type="url" id="sheet-url-input" placeholder="Tempel URL Web App di sini" class="mt-2 w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:border-gray-600"></div><div class="flex justify-end gap-2 mt-4"><button id="cancel-setup-btn" class="bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-black dark:text-white font-bold py-2 px-4 rounded-lg">Batal</button><button id="save-url-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Simpan & Lanjutkan</button></div></div></div></div>
+
+
+    <script>
+        lucide.createIcons();
+
+        // --- DOM Elements ---
+        const apiKeyScreen = document.getElementById('api-key-screen');
+        const apiKeyInput = document.getElementById('api-key-input');
+        const saveApiKeyBtn = document.getElementById('save-api-key-btn');
+        const initialScreen = document.getElementById('initial-screen');
+        const scannerScreen = document.getElementById('scanner-screen');
+        const processingScreen = document.getElementById('processing-screen');
+        const resultsScreen = document.getElementById('results-screen');
+        const allScreens = [apiKeyScreen, initialScreen, scannerScreen, processingScreen, resultsScreen];
+        const startBtn = document.getElementById('start-btn');
+        const uploadBtn = document.getElementById('upload-btn');
+        const imageUploadInput = document.getElementById('image-upload-input');
+        const captureBtn = document.getElementById('capture-btn');
+        const cancelScanBtn = document.getElementById('cancel-scan-btn');
+        const saveBtn = document.getElementById('save-btn');
+        const rescanBtn = document.getElementById('rescan-btn');
+        const generateEmailBtn = document.getElementById('generate-email-btn');
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const snapSound = document.getElementById('snap-sound');
+        const rawTextContainer = document.getElementById('raw-text-container');
+        const rawTextEl = document.getElementById('raw-text');
+        const progressTitle = document.getElementById('progress-title');
+        const progressStatus = document.getElementById('progress-status');
+        const form = document.getElementById('data-form');
+        const nameInput = document.getElementById('nama');
+        const positionInput = document.getElementById('jabatan');
+        const companyInput = document.getElementById('perusahaan');
+        const phoneInput = document.getElementById('telepon');
+        const emailInput = document.getElementById('email');
+        const emailModal = document.getElementById('email-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const emailDraft = document.getElementById('email-draft');
+        const copyEmailBtn = document.getElementById('copy-email-btn');
+        const copyStatus = document.getElementById('copy-status');
+        const modalLoader = document.getElementById('modal-loader');
+        const modalResult = document.getElementById('modal-result');
+        const saveToSheetBtn = document.getElementById('save-to-sheet-btn');
+        const sheetSaveStatus = document.getElementById('sheet-save-status');
+        const settingsBtn = document.getElementById('settings-btn');
+        const sheetSetupModal = document.getElementById('sheet-setup-modal');
+        const closeSetupModalBtn = document.getElementById('close-setup-modal-btn');
+        const cancelSetupBtn = document.getElementById('cancel-setup-btn');
+        const saveUrlBtn = document.getElementById('save-url-btn');
+        const sheetUrlInput = document.getElementById('sheet-url-input');
+        const copyScriptBtn = document.getElementById('copy-script-btn');
+        const appsScriptCode = document.getElementById('apps-script-code');
+        
+        // --- State ---
+        let geminiApiKey = localStorage.getItem('geminiApiKey') || '';
+        let googleScriptUrl = localStorage.getItem('googleScriptUrl') || '';
+        let stream;
+
+        // --- Functions ---
+        function showScreen(screenId) {
+            allScreens.forEach(screen => screen.classList.add('hidden'));
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        async function startCamera() {
+            try {
+                if (stream) { stream.getTracks().forEach(track => track.stop()); }
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                video.srcObject = stream;
+                video.onloadedmetadata = () => {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                };
+                showScreen('scanner-screen');
+            } catch (err) {
+                console.error("Error accessing camera:", err);
+                alert("Tidak dapat mengakses kamera. Pastikan Anda memberikan izin.");
+                showScreen('initial-screen');
+            }
+        }
+
+        function stopCamera() {
+            if (stream) { stream.getTracks().forEach(track => track.stop()); }
+        }
+
+        async function captureAndProcess() {
+            showScreen('processing-screen');
+            snapSound.play();
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            stopCamera();
+            const imageDataUrl = canvas.toDataURL('image/png');
+            
+            try {
+                await extractDataWithGeminiVision(imageDataUrl);
+                showScreen('results-screen');
+            } catch (error) {
+                console.error("Processing Error:", error);
+                alert(`Gagal memproses gambar: ${error.message}`);
+                resetApp();
+            }
+        }
+
+        async function extractDataWithGeminiVision(imageDataUrl) {
+            form.reset();
+            progressTitle.textContent = 'AI Menganalisis Gambar...';
+            progressStatus.textContent = 'Mengirim gambar ke Gemini untuk ekstraksi...';
+            const base64ImageData = imageDataUrl.split(',')[1];
+            const prompt = `Anda adalah API yang sangat akurat untuk membaca dan mengekstrak informasi dari gambar kartu nama berbahasa Indonesia. Tugas Anda adalah menganalisis gambar ini dan mengembalikan data dalam format JSON yang ketat. Jangan menambahkan penjelasan apapun. Jika ada informasi yang tidak ditemukan, kembalikan string kosong "" untuk field tersebut.`;
+            const schema = { type: "OBJECT", properties: { nama: { type: "STRING" }, jabatan: { type: "STRING" }, perusahaan: { type: "STRING" }, telepon: { type: "STRING" }, email: { type: "STRING" } }, required: ["nama", "jabatan", "perusahaan", "telepon", "email"] };
+            const payload = { contents: [{ role: "user", parts: [{ text: prompt }, { inlineData: { mimeType: "image/png", data: base64ImageData } }] }], generationConfig: { responseMimeType: "application/json", responseSchema: schema } };
+            try {
+                const apiKey = geminiApiKey; // Use the stored API key
+                if (!apiKey) {
+                    throw new Error("API Key Gemini tidak ditemukan. Silakan refresh halaman dan masukkan API Key.");
+                }
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) { throw new Error(`API Error: ${response.status} ${response.statusText}. Periksa kembali API Key Anda.`); }
+                const result = await response.json();
+                if (result.candidates && result.candidates[0].content && result.candidates[0].content.parts[0].text) {
+                    const jsonString = result.candidates[0].content.parts[0].text;
+                    const extractedData = JSON.parse(jsonString);
+                    nameInput.value = extractedData.nama || '';
+                    positionInput.value = extractedData.jabatan || '';
+                    companyInput.value = extractedData.perusahaan || '';
+                    phoneInput.value = extractedData.telepon || '';
+                    emailInput.value = extractedData.email || '';
+                    rawTextEl.textContent = JSON.stringify(extractedData, null, 2);
+                    rawTextContainer.classList.remove('hidden');
+                } else {
+                    throw new Error("Respons dari AI tidak valid atau kosong.");
+                }
+            } catch (error) {
+                console.error("Gemini Extraction Failed:", error);
+                alert(`Gagal mengekstrak data dengan AI: ${error.message}`);
+                showScreen('results-screen');
+            }
+        }
+
+        function saveAsCSV() {
+            const headers = ['Nama', 'Jabatan', 'Perusahaan', 'No. HP/WA', 'Email'];
+            const data = [nameInput.value, positionInput.value, companyInput.value, phoneInput.value, emailInput.value];
+            const escapeCSV = (field) => `"${String(field).replace(/"/g, '""')}"`;
+            const csvContent = [headers.join(','), data.map(escapeCSV).join(',')].join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                const filename = (nameInput.value || 'kontak').replace(/\s+/g, '_').toLowerCase();
+                link.setAttribute("href", url);
+                link.setAttribute("download", `${filename}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+        
+        function resetApp() {
+            stopCamera();
+            form.reset();
+            rawTextContainer.classList.add('hidden');
+            rawTextEl.textContent = '';
+            showScreen('initial-screen');
+        }
+
+        async function sendDataToSheet() {
+            sheetSaveStatus.textContent = "Menyimpan ke Google Sheet...";
+            sheetSaveStatus.className = "text-center text-sm h-5 text-blue-500 animate-pulse";
+            const payload = { nama: nameInput.value, jabatan: positionInput.value, perusahaan: companyInput.value, telepon: phoneInput.value, email: emailInput.value };
+            try {
+                const response = await fetch(googleScriptUrl, { method: 'POST', mode: 'cors', redirect: 'follow', headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
+                if (response.ok || response.type === 'opaque') {
+                     sheetSaveStatus.textContent = "✔ Berhasil disimpan ke Google Sheet!";
+                     sheetSaveStatus.className = "text-center text-sm h-5 text-green-500";
+                } else {
+                    throw new Error(`Gagal mengirim data. Status: ${response.status}`);
+                }
+            } catch (error) {
+                console.error("Error saving to Google Sheet:", error);
+                sheetSaveStatus.textContent = `❌ Gagal menyimpan. Periksa URL atau koneksi Anda.`;
+                sheetSaveStatus.className = "text-center text-sm h-5 text-red-500";
+            } finally {
+                setTimeout(() => { sheetSaveStatus.textContent = ""; }, 4000);
+            }
+        }
+
+        function handleSaveToSheetClick() {
+            if (googleScriptUrl) {
+                sendDataToSheet();
+            } else {
+                openSheetSetupModal();
+            }
+        }
+        
+        function openSheetSetupModal() {
+            sheetSetupModal.classList.remove('hidden');
+            setTimeout(() => sheetSetupModal.classList.remove('opacity-0'), 10);
+            setTimeout(() => sheetSetupModal.querySelector('.modal-content').classList.remove('scale-95'), 10);
+        }
+
+        function closeSheetSetupModal() {
+            sheetSetupModal.classList.add('opacity-0');
+            sheetSetupModal.querySelector('.modal-content').classList.add('scale-95');
+            setTimeout(() => sheetSetupModal.classList.add('hidden'), 300);
+        }
+
+        function saveUrlAndContinue() {
+            const url = sheetUrlInput.value;
+            if (url && url.startsWith("https://script.google.com/macros/s/")) {
+                googleScriptUrl = url;
+                localStorage.setItem('googleScriptUrl', url);
+                closeSheetSetupModal();
+                sendDataToSheet();
+            } else {
+                alert("URL yang Anda masukkan tidak valid. Pastikan Anda menyalin URL Web App dengan benar.");
+            }
+        }
+        
+        function promptForNewUrl() {
+             const url = prompt("Masukkan atau perbarui URL Web App Google Apps Script Anda:", googleScriptUrl);
+             if (url) {
+                googleScriptUrl = url;
+                localStorage.setItem('googleScriptUrl', url);
+                alert("URL berhasil diperbarui!");
+             }
+        }
+
+        function openEmailModal() {
+            emailModal.classList.remove('hidden');
+            setTimeout(() => emailModal.classList.remove('opacity-0'), 10);
+            setTimeout(() => emailModal.querySelector('.modal-content').classList.remove('scale-95'), 10);
+        }
+
+        function closeEmailModal() {
+            emailModal.classList.add('opacity-0');
+            emailModal.querySelector('.modal-content').classList.add('scale-95');
+            setTimeout(() => emailModal.classList.add('hidden'), 300);
+        }
+
+        async function handleGenerateEmail() {
+            openEmailModal();
+            modalLoader.classList.remove('hidden');
+            modalResult.classList.add('hidden');
+            emailDraft.value = '';
+            copyStatus.textContent = '';
+            const contactName = nameInput.value || 'Bapak/Ibu';
+            const contactPosition = positionInput.value;
+            const contactCompany = companyInput.value;
+            const prompt = `Anda adalah seorang asisten profesional di Indonesia. Berdasarkan informasi berikut:\nNama Kontak: ${contactName}\nJabatan: ${contactPosition || 'rekan'}\nPerusahaan: ${contactCompany || 'perusahaan Anda'}\n\nTuliskan sebuah draf email follow-up yang singkat, profesional, dan ramah dalam Bahasa Indonesia. Email ini bertujuan untuk menjalin koneksi setelah sebuah pertemuan atau acara networking. Sapa kontak dengan namanya. Sebutkan juga perusahaan tempat mereka bekerja. Akhiri dengan penutup yang profesional dan placeholder untuk nama Anda, contohnya "[Nama Anda]".`;
+            try {
+                let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+                const payload = { contents: chatHistory };
+                const apiKey = geminiApiKey; // Use the stored API key
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) { throw new Error(`API Error: ${response.statusText}`); }
+                const result = await response.json();
+                if (result.candidates && result.candidates[0].content && result.candidates[0].content.parts[0].text) {
+                    emailDraft.value = result.candidates[0].content.parts[0].text;
+                } else {
+                    emailDraft.value = "Maaf, gagal menghasilkan draf email. Respons dari AI tidak valid.";
+                }
+            } catch (error) {
+                console.error("Gemini API call failed:", error);
+                emailDraft.value = `Maaf, terjadi kesalahan saat menghubungi AI. Silakan coba lagi.\n\nDetail: ${error.message}`;
+            } finally {
+                modalLoader.classList.add('hidden');
+                modalResult.classList.remove('hidden');
+            }
+        }
+
+        function copyEmailToClipboard() {
+            emailDraft.select();
+            try {
+                document.execCommand('copy');
+                copyStatus.textContent = 'Teks berhasil disalin!';
+                setTimeout(() => { copyStatus.textContent = ''; }, 2000);
+            } catch (err) {
+                copyStatus.textContent = 'Gagal menyalin teks.';
+                console.error('Fallback: Oops, unable to copy', err);
+            }
+        }
+
+        function copyScriptToClipboard() {
+            const textToCopy = appsScriptCode.textContent;
+            const textArea = document.createElement("textarea");
+            textArea.value = textToCopy;
+            textArea.style.position = "fixed"; textArea.style.top = 0; textArea.style.left = 0; textArea.style.width = "2em"; textArea.style.height = "2em"; textArea.style.padding = 0; textArea.style.border = "none"; textArea.style.outline = "none"; textArea.style.boxShadow = "none"; textArea.style.background = "transparent";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    copyScriptBtn.textContent = 'Disalin!';
+                    setTimeout(() => { copyScriptBtn.textContent = 'Salin'; }, 2000);
+                } else {
+                     alert('Gagal menyalin kode. Silakan salin secara manual.');
+                }
+            } catch (err) {
+                console.error('Fallback copy error:', err);
+                alert('Gagal menyalin kode. Silakan salin secara manual.');
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function handleApiKeySubmit() {
+            const key = apiKeyInput.value.trim();
+            if (key) {
+                geminiApiKey = key;
+                localStorage.setItem('geminiApiKey', key);
+                showScreen('initial-screen');
+            } else {
+                alert('API Key tidak boleh kosong.');
+            }
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (!file.type.startsWith('image/')) {
+                alert('Silakan unggah file gambar (JPG, PNG, dll).');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const imageDataUrl = e.target.result;
+                showScreen('processing-screen');
+                extractDataWithGeminiVision(imageDataUrl)
+                    .then(() => showScreen('results-screen'))
+                    .catch(error => {
+                        console.error("Processing Error:", error);
+                        alert(`Gagal memproses gambar: ${error.message}`);
+                        resetApp();
+                    });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // --- Event Listeners ---
+        startBtn.addEventListener('click', startCamera);
+        uploadBtn.addEventListener('click', () => imageUploadInput.click());
+        imageUploadInput.addEventListener('change', handleImageUpload);
+        captureBtn.addEventListener('click', captureAndProcess);
+        cancelScanBtn.addEventListener('click', () => { stopCamera(); showScreen('initial-screen'); });
+        saveBtn.addEventListener('click', saveAsCSV);
+        rescanBtn.addEventListener('click', resetApp);
+        generateEmailBtn.addEventListener('click', handleGenerateEmail);
+        closeModalBtn.addEventListener('click', closeEmailModal);
+        copyEmailBtn.addEventListener('click', copyEmailToClipboard);
+        saveToSheetBtn.addEventListener('click', handleSaveToSheetClick);
+        settingsBtn.addEventListener('click', promptForNewUrl);
+        closeSetupModalBtn.addEventListener('click', closeSheetSetupModal);
+        cancelSetupBtn.addEventListener('click', closeSheetSetupModal);
+        saveUrlBtn.addEventListener('click', saveUrlAndContinue);
+        copyScriptBtn.addEventListener('click', copyScriptToClipboard);
+        saveApiKeyBtn.addEventListener('click', handleApiKeySubmit);
+        
+        // --- Initialize on load ---
+        document.addEventListener('DOMContentLoaded', () => {
+            if (geminiApiKey) {
+                showScreen('initial-screen');
+            } else {
+                showScreen('api-key-screen');
+            }
+        });
+
+    </script>
+</body>
+</html>
